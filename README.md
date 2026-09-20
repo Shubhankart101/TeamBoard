@@ -81,14 +81,13 @@ TeamBoard hosts backend technical Knowledge Base entries (spanning APIs, Databas
 TeamBoard/
 ├── .github/
 │   └── workflows/
-│       ├── templates/                # Reusable GitHub Actions Workflow Templates
-│       │   ├── template-test.yml     # Reusable Template: Python setup, Pytest & coverage
-│       │   ├── template-infra.yml    # Reusable Template: Terraform init, plan & apply
-│       │   └── template-code-deploy.yml # Reusable Template: Container build & Web App deploy
-│       ├── pipeline-pr-validation.yml# PR Quality Gate (Invokes template-test.yml)
-│       ├── pipeline-code-testing.yml # Code Testing Pipeline (Invokes template-test.yml)
-│       ├── pipeline-infra.yml        # Infrastructure Pipeline (Invokes template-infra.yml)
-│       └── pipeline-code.yml         # Code Deploy Pipeline (Invokes template-code-deploy.yml)
+│       ├── reusable-test.yml         # Reusable Template: Python setup, Pytest & coverage
+│       ├── reusable-infra.yml        # Reusable Template: Terraform init, plan & apply
+│       ├── reusable-code-deploy.yml  # Reusable Template: Container build & Web App deploy
+│       ├── pipeline-pr-validation.yml# PR Quality Gate (Invokes reusable-test.yml)
+│       ├── pipeline-code-testing.yml # Code Testing Pipeline (Invokes reusable-test.yml)
+│       ├── pipeline-infra.yml        # Infrastructure Pipeline (Invokes reusable-infra.yml)
+│       └── pipeline-code.yml         # Code Deploy Pipeline (Invokes reusable-code-deploy.yml)
 ├── api/
 │   ├── management/
 │   │   └── commands/
@@ -380,22 +379,22 @@ To ensure separation of concerns and independent execution lifecycle, the pipeli
 
 ---
 
-### 2. GitHub Actions Templatisation (`.github/workflows/templates/`)
-GitHub Actions pipelines leverage reusable workflow templates defined in `.github/workflows/templates/`:
+### 2. GitHub Actions Templatisation (`.github/workflows/reusable-*.yml`)
+GitHub Actions pipelines leverage reusable workflow templates defined in `.github/workflows/`:
 
-- **`template-test.yml`**: Configures Python, installs dependencies, verifies Django migrations (`makemigrations --check --dry-run`), runs Pytest with coverage reporting, conditionally builds Docker images (`test-build-docker: true`), and uploads artifacts.
-- **`template-infra.yml`**: Authenticates to Azure CLI, sets up HashiCorp Terraform (`hashicorp/setup-terraform@v3`), and runs `terraform init`, `terraform plan`, and `terraform apply -auto-approve`.
-- **`template-code-deploy.yml`**: Authenticates to Azure Container Registry (`az acr login`), builds and tags Docker images with commit SHA and `latest`, pushes to ACR, and deploys to Azure Web App for Containers.
+- **`reusable-test.yml`**: Configures Python, installs dependencies, verifies Django migrations (`makemigrations --check --dry-run`), runs Pytest with coverage reporting, conditionally builds Docker images (`test-build-docker: true`), and uploads artifacts.
+- **`reusable-infra.yml`**: Authenticates to Azure CLI, sets up HashiCorp Terraform (`hashicorp/setup-terraform@v3`), and runs `terraform init`, `terraform plan`, and `terraform apply -auto-approve`.
+- **`reusable-code-deploy.yml`**: Authenticates to Azure Container Registry (`az acr login`), builds and tags Docker images with commit SHA and `latest`, pushes to ACR, and deploys to Azure Web App for Containers.
 
 ---
 
 ### 3. Decoupled Pipelines Invoking Templates
 
 - **GitHub Actions Workflows (`.github/workflows/`)**:
-  - `pipeline-pr-validation.yml`: Pre-merge quality gate (invokes `template-test.yml` with `test-build-docker: true`).
-  - `pipeline-code-testing.yml`: Independent automated testing pipeline (invokes `template-test.yml`).
-  - `pipeline-infra.yml`: Independent infrastructure pipeline (invokes `template-infra.yml`).
-  - `pipeline-code.yml`: Independent container deployment pipeline (invokes `template-code-deploy.yml`).
+  - `pipeline-pr-validation.yml`: Pre-merge quality gate (invokes `reusable-test.yml` with `test-build-docker: true`).
+  - `pipeline-code-testing.yml`: Independent automated testing pipeline (invokes `reusable-test.yml`).
+  - `pipeline-infra.yml`: Independent infrastructure pipeline (invokes `reusable-infra.yml`).
+  - `pipeline-code.yml`: Independent container deployment pipeline (invokes `reusable-code-deploy.yml`).
 - **Azure DevOps Pipelines (`pipelines/` & root)**:
   - `pipelines/pipeline-pr-validation.yml`: Independent PR validation gate (invokes `test-steps-template.yml`).
   - `pipelines/pipeline-code-testing.yml`: Independent test pipeline (invokes `test-steps-template.yml`).

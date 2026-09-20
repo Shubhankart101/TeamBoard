@@ -1,4 +1,4 @@
-name: Template - Code Deployment (Docker & Azure App Service)
+name: Reusable Template - Code Deployment (Docker & Azure App Service)
 
 on:
   workflow_call:

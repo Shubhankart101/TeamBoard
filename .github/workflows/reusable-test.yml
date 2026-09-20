@@ -1,4 +1,4 @@
-name: Template - Code Testing
+name: Reusable Template - Code Testing
 
 on:
   workflow_call:

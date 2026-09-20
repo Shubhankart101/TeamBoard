@@ -10,7 +10,7 @@ on:
 jobs:
   infrastructure-provisioning:
     name: Invoke Terraform Infrastructure Template
-    uses: ./.github/workflows/templates/template-infra.yml
+    uses: ./.github/workflows/reusable-infra.yml
     with:
       terraform-version: '1.5.7'
       working-directory: 'infrastructure'

@@ -1,4 +1,4 @@
-name: Template - Infrastructure Provisioning (Terraform)
+name: Reusable Template - Infrastructure Provisioning (Terraform)
 
 on:
   workflow_call:

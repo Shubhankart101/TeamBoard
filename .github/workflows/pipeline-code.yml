@@ -8,7 +8,7 @@ on:
 jobs:
   code-deployment:
     name: Invoke Code Deployment Template
-    uses: ./.github/workflows/templates/template-code-deploy.yml
+    uses: ./.github/workflows/reusable-code-deploy.yml
     with:
       acr-name: 'acrteamboarddev'
       webapp-name: 'app-teamboard-dev'

@@ -10,7 +10,7 @@ on:
 jobs:
   code-testing:
     name: Invoke Automated Code Testing Template
-    uses: ./.github/workflows/templates/template-test.yml
+    uses: ./.github/workflows/reusable-test.yml
     with:
       python-version: '3.11'
       test-build-docker: false
