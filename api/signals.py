@@ -7,7 +7,8 @@ from .models import Company
 
 @receiver(post_save, sender=User)
 def create_company_profile(sender, instance, created, **kwargs):
-    if created:
+    # Detect user first creation (using created / instance._state.adding)
+    if created or getattr(getattr(instance, '_state', None), 'adding', False):
         Company.objects.create(
             user=instance,
             company_name=instance.email or instance.username,
