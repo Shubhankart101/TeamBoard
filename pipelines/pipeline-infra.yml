@@ -1,0 +1,25 @@
+name: TeamBoard-Infra-Provisioning-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - main
+      - master
+  paths:
+    include:
+      - infrastructure/**
+
+variables:
+  azureServiceConnection: 'Azure-Subscription-ServiceConnection'
+  workingDirectory: 'infrastructure'
+
+jobs:
+  - job: InfrastructureJob
+    displayName: 'Provision Azure Infrastructure via Terraform'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - template: templates/terraform-steps-template.yml
+        parameters:
+          azureServiceConnection: '$(azureServiceConnection)'
+          workingDirectory: '$(workingDirectory)'

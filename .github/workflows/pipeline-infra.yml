@@ -1,0 +1,40 @@
+name: Pipeline - Infrastructure (Terraform)
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'infrastructure/**'
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    name: Provision Infrastructure via Terraform Modules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.7
+
+      - name: Terraform Init & Apply
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          TF_VAR_db_admin_password: ${{ secrets.DB_ADMIN_PASSWORD }}
+          TF_VAR_django_secret_key: ${{ secrets.DJANGO_SECRET_KEY }}
+        run: |
+          cd infrastructure
+          terraform init
+          terraform plan
+          terraform apply -auto-approve

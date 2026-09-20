@@ -1,0 +1,26 @@
+name: TeamBoard-Code-Deployment-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - main
+      - master
+
+variables:
+  azureServiceConnection: 'Azure-Subscription-ServiceConnection'
+  containerRegistryName: 'acrteamboarddev'
+  webAppName: 'app-teamboard-dev'
+  appName: 'teamboard'
+
+jobs:
+  - job: CodeDeploymentJob
+    displayName: 'Build & Deploy Application Container'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - template: templates/docker-deploy-steps-template.yml
+        parameters:
+          azureServiceConnection: '$(azureServiceConnection)'
+          containerRegistryName: '$(containerRegistryName)'
+          webAppName: '$(webAppName)'
+          appName: '$(appName)'

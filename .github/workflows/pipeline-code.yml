@@ -1,0 +1,42 @@
+name: Pipeline - Code Deployment (Docker & Azure App Service)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  ACR_NAME: 'acrteamboarddev'
+  WEBAPP_NAME: 'app-teamboard-dev'
+  APP_NAME: 'teamboard'
+
+jobs:
+  deploy:
+    name: Build Container & Deploy to Azure Web App
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to Azure Container Registry
+        run: |
+          az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and Push Docker Image
+        run: |
+          IMAGE_TAG=${{ env.ACR_NAME }}.azurecr.io/${{ env.APP_NAME }}:${{ github.sha }}
+          IMAGE_LATEST=${{ env.ACR_NAME }}.azurecr.io/${{ env.APP_NAME }}:latest
+          docker build -t $IMAGE_TAG -t $IMAGE_LATEST .
+          docker push $IMAGE_TAG
+          docker push $IMAGE_LATEST
+
+      - name: Deploy Container to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.WEBAPP_NAME }}
+          images: ${{ env.ACR_NAME }}.azurecr.io/${{ env.APP_NAME }}:latest

@@ -1,0 +1,7 @@
+# Example Terraform Variables File
+location          = "East US"
+environment       = "dev"
+app_name          = "teamboard"
+db_admin_user     = "tbadmin"
+db_admin_password = "SuperSecretPassword123!"
+django_secret_key = "django-insecure-production-secret-key-replace-me"

@@ -4,12 +4,12 @@
 [![Django](https://img.shields.io/badge/Django-5.0.3-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![Django REST Framework](https://img.shields.io/badge/DRF-3.15.1-red?logo=django&logoColor=white)](https://www.django-rest-framework.org/)
 [![Swagger / OpenAPI](https://img.shields.io/badge/OpenAPI-3.0%20(drf--spectacular)-green?logo=swagger&logoColor=white)](http://127.0.0.1:8000/api/docs/)
-[![Terraform](https://img.shields.io/badge/IaC-Terraform-7B42BC?logo=terraform&logoColor=white)](https://www.terraform.io/)
+[![Terraform Modules](https://img.shields.io/badge/IaC-Terraform%20Modules-7B42BC?logo=terraform&logoColor=white)](https://www.terraform.io/)
 [![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![Azure](https://img.shields.io/badge/Cloud-Azure%20App%20Service%20%26%20PostgreSQL-0089D6?logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/)
 [![Coverage](https://img.shields.io/badge/Coverage-97%25-brightgreen?logo=pytest&logoColor=white)](#automated-testing-framework)
 
-TeamBoard is an enterprise-grade **B2B Knowledge Base API Platform** built with **Django REST Framework (DRF)**, **PostgreSQL**, **Docker**, **Terraform**, and **Azure Web Services**.
+TeamBoard is an enterprise-grade **B2B Knowledge Base API Platform** built with **Django REST Framework (DRF)**, **PostgreSQL**, **Docker**, **Modular Terraform**, **Azure Services**, and **Templatized CI/CD Pipelines**.
 
 The platform powers product helpdesks, onboarding widgets, and AI chat assistants by serving curated technical Q&A entries, tracking usage per client company atomically, and providing real-time platform analytics to system administrators.
 
@@ -25,8 +25,8 @@ The platform powers product helpdesks, onboarding widgets, and AI chat assistant
 - [Environment Variables Configuration](#-environment-variables-configuration)
 - [Local Setup \& Quick Start](#-local-setup--quick-start)
 - [Docker Containerization](#-docker-containerization)
-- [Infrastructure as Code (Terraform on Azure)](#-infrastructure-as-code-terraform-on-azure)
-- [CI/CD Pipelines \& Automated Testing](#-cicd-pipelines--automated-testing)
+- [Modular Infrastructure as Code (Terraform on Azure)](#-modular-infrastructure-as-code-terraform-on-azure)
+- [Templatized CI/CD Pipelines \& Automated Testing](#-templatized-cicd-pipelines--automated-testing)
 - [Postman Collection](#-postman-collection)
 
 ---
@@ -47,7 +47,8 @@ TeamBoard hosts backend technical Knowledge Base entries (spanning APIs, Databas
 - **JWT Authentication & Global Protection:** Configured with `DEFAULT_AUTHENTICATION_CLASSES` and `DEFAULT_PERMISSION_CLASSES` (`IsAuthenticated`), protecting endpoints globally while explicitly exempting public auth routes (`Register` and `Login`).
 - **Automated Profile & API Key Creation:** Uses Django `post_save` signals on the `User` model to automatically instantiate a `Company` record and generate a 32-character URL-safe API key (`secrets.token_urlsafe(32)`).
 - **Interactive Swagger UI & ReDoc:** Built-in OpenAPI 3.0 schema generation using `drf-spectacular` with typed request/response schemas and interactive API testing.
-- **Infrastructure as Code (Terraform):** Declarative Terraform scripts (`infrastructure/main.tf`) provisioning Azure App Service, Azure Container Registry (ACR), and Azure PostgreSQL Flexible Server.
+- **Modular Terraform Architecture:** Structured with reusable child modules (`modules/container_registry`, `modules/postgresql`, `modules/app_service`) and separated root declarations (`providers.tf`, `variables.tf`, `outputs.tf`, `main.tf`).
+- **Templatized Pipelines & Separation of Duties:** Independent CI/CD pipelines for **Code Testing**, **Infrastructure Provisioning**, and **Code Deployment**, built using reusable steps templates in both GitHub Actions and Azure DevOps.
 - **Automated Testing Suite:** Pytest-driven test suite with `pytest-django` and `pytest-cov`, maintaining 97%+ code coverage.
 
 ---
@@ -58,8 +59,9 @@ TeamBoard hosts backend technical Knowledge Base entries (spanning APIs, Databas
 TeamBoard/
 ├── .github/
 │   └── workflows/
-│       ├── ci-test.yml               # GitHub Actions Automated Test Workflow
-│       └── azure-deploy.yml          # GitHub Actions Terraform & Azure App Service Deploy
+│       ├── pipeline-code-testing.yml # Pipeline: Automated Testing (GitHub Actions)
+│       ├── pipeline-infra.yml        # Pipeline: Infrastructure Provisioning (GitHub Actions)
+│       └── pipeline-code.yml         # Pipeline: Code Build & Container Deploy (GitHub Actions)
 ├── api/
 │   ├── management/
 │   │   └── commands/
@@ -74,7 +76,32 @@ TeamBoard/
 │   ├── urls.py                       # API & Swagger route definitions
 │   └── views.py                      # Register, Login, Query KB, and Usage Summary views
 ├── infrastructure/
-│   └── main.tf                       # Terraform configuration for Azure Cloud Hosting
+│   ├── modules/                      # Reusable Terraform Child Modules
+│   │   ├── app_service/              # Module: App Service Plan & Linux Web App
+│   │   │   ├── main.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── variables.tf
+│   │   ├── container_registry/       # Module: Azure Container Registry (ACR)
+│   │   │   ├── main.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── variables.tf
+│   │   └── postgresql/               # Module: Azure PostgreSQL Flexible Server & Database
+│   │       ├── main.tf
+│   │       ├── outputs.tf
+│   │       └── variables.tf
+│   ├── main.tf                       # Terraform Root Module (Module orchestrator)
+│   ├── outputs.tf                    # Root Output Variables
+│   ├── providers.tf                  # Provider configuration (azurerm & version lock)
+│   ├── terraform.tfvars.example      # Example Terraform Variable input file
+│   └── variables.tf                  # Root Input Variable definitions
+├── pipelines/
+│   ├── templates/                    # Reusable Pipeline Step Templates (Azure DevOps)
+│   │   ├── docker-deploy-steps-template.yml # Template: Container build, push & Web App deploy
+│   │   ├── terraform-steps-template.yml     # Template: Terraform init & apply
+│   │   └── test-steps-template.yml          # Template: Python setup, Pytest & coverage
+│   ├── pipeline-code-testing.yml     # Separate Pipeline: Automated Code Testing
+│   ├── pipeline-infra.yml            # Separate Pipeline: Infrastructure Provisioning
+│   └── pipeline-code.yml             # Separate Pipeline: Code Deployment
 ├── teamboard/
 │   ├── asgi.py                       # ASGI configuration
 │   ├── settings.py                   # Django settings, SimpleJWT & drf-spectacular config
@@ -83,8 +110,8 @@ TeamBoard/
 ├── .dockerignore                     # Files excluded from Docker builds
 ├── .env.example                      # Environment variables template
 ├── .gitignore                        # Git ignore patterns
-├── azure-pipelines.yml               # Multi-stage Azure DevOps CI/CD Pipeline
-├── azure-pipelines-test.yml          # Azure DevOps Test Execution Pipeline
+├── azure-pipelines.yml               # Master Orchestrator Pipeline (Azure DevOps)
+├── azure-pipelines-test.yml          # Test Runner Pipeline (Azure DevOps)
 ├── docker-compose.yml                # Multi-container orchestration (Django + PostgreSQL)
 ├── Dockerfile                        # Production-ready Python Docker container image
 ├── manage.py                         # Django administrative CLI
@@ -284,30 +311,70 @@ docker compose exec web python manage.py seed_kb
 
 ---
 
-## 🏗️ Infrastructure as Code (Terraform on Azure)
+## 🏗️ Modular Infrastructure as Code (Terraform on Azure)
 
-The infrastructure is declared in [infrastructure/main.tf](infrastructure/main.tf). It provisions:
+The infrastructure is built using modular Terraform components under `infrastructure/`:
 
-- **Resource Group:** `rg-teamboard-dev`
-- **Azure Container Registry (ACR):** `acrteamboarddev` (Basic SKU)
-- **Azure PostgreSQL Flexible Server:** `psql-teamboard-dev` (PostgreSQL 15 with firewall rule for Azure services)
-- **App Service Plan:** `asp-teamboard-dev` (Linux B1 Basic tier)
-- **Azure Linux Web App for Containers:** `app-teamboard-dev`
+### Module Architecture
+- **Root Module (`infrastructure/main.tf`)**: Instantiates child modules, managing dependencies and passing configuration variables.
+- **Container Registry Module (`infrastructure/modules/container_registry/`)**: Provisions Azure Container Registry (`ACR`) with admin credentials enabled.
+- **PostgreSQL Module (`infrastructure/modules/postgresql/`)**: Provisions Azure PostgreSQL Flexible Server v15, database instance (`teamboard_db`), and firewall rules for Azure internal routing.
+- **App Service Module (`infrastructure/modules/app_service/`)**: Provisions Linux App Service Plan (`asp-teamboard-dev`) and Azure Web App for Containers (`app-teamboard-dev`), configuring container registries and application environment variables.
 
-### Provision Infrastructure
+### Provision Infrastructure via Terraform
 
 ```bash
 cd infrastructure
+
+# Initialize providers and child modules
 terraform init
+
+# Validate execution plan
 terraform plan -var="db_admin_password=<YOUR_PASSWORD>" -var="django_secret_key=<YOUR_SECRET_KEY>"
+
+# Apply infrastructure changes
 terraform apply -auto-approve -var="db_admin_password=<YOUR_PASSWORD>" -var="django_secret_key=<YOUR_SECRET_KEY>"
 ```
 
 ---
 
-## 🧪 CI/CD Pipelines & Automated Testing
+## 🧪 Templatized CI/CD Pipelines & Automated Testing
 
-### Running Tests & Coverage Locally
+### 1. Separate Pipeline Architecture
+To ensure separation of concerns and independent execution lifecycle, the pipelines are decoupled into three distinct workflows:
+
+| Pipeline Name | Purpose | Trigger / Scope |
+|---|---|---|
+| **Code Testing Pipeline** | Runs Django migration checks, Pytest suite, and code coverage reporting | Triggers on pull requests & pushes across all branches |
+| **Infrastructure Pipeline** | Initializes and applies Terraform modules to provision/update Azure resources | Triggers on changes inside `infrastructure/` directory |
+| **Code Deployment Pipeline** | Builds Docker container image, pushes to ACR, and updates Azure Web App | Triggers on push to `main`/`master` branches |
+
+---
+
+### 2. Pipeline Templatisation (Azure DevOps)
+Azure DevOps pipelines leverage step templates defined in `pipelines/templates/`:
+
+- **`test-steps-template.yml`**: Configures Python, installs dependencies, checks migrations, runs Pytest with JUnit output, and publishes coverage reports.
+- **`terraform-steps-template.yml`**: Executes `terraform init` and `terraform apply` using Azure CLI credentials.
+- **`docker-deploy-steps-template.yml`**: Performs Docker container builds, pushes tagged images to ACR, and updates the Azure Web App.
+
+---
+
+### 3. Separate Pipelines (GitHub Actions & Azure DevOps)
+
+- **GitHub Actions Workflows (`.github/workflows/`)**:
+  - `pipeline-code-testing.yml`: Independent workflow for automated tests.
+  - `pipeline-infra.yml`: Independent workflow for Terraform infrastructure deployment.
+  - `pipeline-code.yml`: Independent workflow for building & deploying container images.
+- **Azure DevOps Pipelines (`pipelines/` & root)**:
+  - `pipelines/pipeline-code-testing.yml`: Independent test pipeline.
+  - `pipelines/pipeline-infra.yml`: Independent infra pipeline.
+  - `pipelines/pipeline-code.yml`: Independent code deployment pipeline.
+  - `azure-pipelines.yml`: Master CI/CD orchestrator pipeline combining all stages.
+
+---
+
+### 4. Running Tests & Coverage Locally
 
 ```bash
 # Run pytest test suite with coverage report
@@ -315,7 +382,7 @@ $env:USE_SQLITE="True"
 pytest
 ```
 
-### Coverage Overview (97% Total)
+### Coverage Summary (97% Total)
 ```
 Name                                Stmts   Miss  Cover
 -------------------------------------------------------
@@ -331,14 +398,6 @@ api/views.py                           78      0   100%
 -------------------------------------------------------
 TOTAL                                 357     12    97%
 ```
-
-### CI/CD Automation Workflows
-- **GitHub Actions Workflows:**
-  - `.github/workflows/ci-test.yml`: Runs migration verification & Pytest test suite on push/PR.
-  - `.github/workflows/azure-deploy.yml`: Applies Terraform infrastructure, builds Docker container to ACR, and deploys to Azure Web App.
-- **Azure DevOps Pipelines:**
-  - `azure-pipelines.yml`: Multi-stage build, test, Terraform deployment, and Web App release pipeline.
-  - `azure-pipelines-test.yml`: Automated test pipeline for pull requests.
 
 ---
 
@@ -357,5 +416,6 @@ Import `TeamBoard.postman_collection.json` into Postman to execute all 11 automa
 9. `GET /api/admin/usage-summary/` — Access with CLIENT token (`403 Forbidden`)
 10. `GET /api/admin/usage-summary/` — Access with ADMIN token (`200 OK`)
 11. `QueryLog Verification` — Validates QueryLog records created in database
+
 
 

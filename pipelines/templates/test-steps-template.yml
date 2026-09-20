@@ -1,0 +1,41 @@
+parameters:
+  - name: pythonVersion
+    type: string
+    default: '3.11'
+  - name: testRunTitle
+    type: string
+    default: 'TeamBoard API Automated Tests'
+
+steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '${{ parameters.pythonVersion }}'
+    displayName: 'Use Python ${{ parameters.pythonVersion }}'
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    displayName: 'Install Dependencies'
+
+  - script: |
+      export USE_SQLITE=True
+      python manage.py makemigrations --check --dry-run
+    displayName: 'Verify Django Migrations'
+
+  - script: |
+      export USE_SQLITE=True
+      pytest --junitxml=test-results.xml --cov=api --cov-report=xml:coverage.xml --cov-report=html
+    displayName: 'Execute Pytest Suite with Coverage'
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFiles: 'test-results.xml'
+      testRunTitle: '${{ parameters.testRunTitle }}'
+    displayName: 'Publish Test Results'
+
+  - task: PublishCodeCoverageResults@2
+    condition: succeededOrFailed()
+    inputs:
+      summaryFileLocation: 'coverage.xml'
+    displayName: 'Publish Code Coverage Results'

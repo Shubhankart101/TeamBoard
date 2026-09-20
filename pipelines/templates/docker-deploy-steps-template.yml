@@ -1,0 +1,30 @@
+parameters:
+  - name: azureServiceConnection
+    type: string
+  - name: containerRegistryName
+    type: string
+  - name: webAppName
+    type: string
+  - name: appName
+    type: string
+    default: 'teamboard'
+
+steps:
+  - task: AzureCLI@2
+    displayName: 'Build & Push Docker Image to ACR'
+    inputs:
+      azureSubscription: '${{ parameters.azureServiceConnection }}'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        az acr login --name ${{ parameters.containerRegistryName }}
+        docker build -t ${{ parameters.containerRegistryName }}.azurecr.io/${{ parameters.appName }}:$(Build.BuildId) -t ${{ parameters.containerRegistryName }}.azurecr.io/${{ parameters.appName }}:latest .
+        docker push ${{ parameters.containerRegistryName }}.azurecr.io/${{ parameters.appName }}:$(Build.BuildId)
+        docker push ${{ parameters.containerRegistryName }}.azurecr.io/${{ parameters.appName }}:latest
+
+  - task: AzureWebAppContainer@1
+    displayName: 'Deploy Container to Azure Web App'
+    inputs:
+      azureSubscription: '${{ parameters.azureServiceConnection }}'
+      appName: '${{ parameters.webAppName }}'
+      containers: '${{ parameters.containerRegistryName }}.azurecr.io/${{ parameters.appName }}:latest'

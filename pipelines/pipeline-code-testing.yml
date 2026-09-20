@@ -1,10 +1,9 @@
-name: TeamBoard-Test-Pipeline-$(Date:yyyyMMdd)$(Rev:.r)
+name: TeamBoard-Code-Testing-$(Date:yyyyMMdd)$(Rev:.r)
 
 trigger:
   branches:
     include:
       - '*'
-
 pr:
   branches:
     include:
@@ -14,12 +13,12 @@ variables:
   pythonVersion: '3.11'
 
 jobs:
-  - job: AutomatedTestRunner
-    displayName: 'Automated Test Framework Execution'
+  - job: CodeTestingJob
+    displayName: 'Automated Code Testing & Quality Checks'
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      - template: pipelines/templates/test-steps-template.yml
+      - template: templates/test-steps-template.yml
         parameters:
           pythonVersion: '$(pythonVersion)'
           testRunTitle: 'TeamBoard API Automated Tests'
