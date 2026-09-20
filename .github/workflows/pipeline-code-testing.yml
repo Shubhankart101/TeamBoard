@@ -8,39 +8,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
-    name: Execute Automated Tests & Coverage
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Verify Django Migrations
-        env:
-          USE_SQLITE: "True"
-        run: |
-          python manage.py makemigrations --check --dry-run
-
-      - name: Run Pytest Suite
-        env:
-          USE_SQLITE: "True"
-        run: |
-          pytest --cov=api --cov-report=xml:coverage.xml --cov-report=term-missing
-
-      - name: Upload Coverage Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.xml
+  code-testing:
+    name: Invoke Automated Code Testing Template
+    uses: ./.github/workflows/templates/template-test.yml
+    with:
+      python-version: '3.11'
+      test-build-docker: false
+      artifact-name: 'coverage-report'

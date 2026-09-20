@@ -33,9 +33,38 @@ stateDiagram-v2
 
 ---
 
+## 🐙 GitHub Actions Templatisation (`.github/workflows/templates/`)
+
+GitHub Actions workflows are built on a modular template architecture using Reusable Workflows (`on: workflow_call:`). Every pipeline workflow in `.github/workflows/` delegates execution to a corresponding template in `.github/workflows/templates/`:
+
+### Reusable Workflow Templates
+1. **`template-test.yml`** (`.github/workflows/templates/template-test.yml`):
+   - Sets up Python with caching.
+   - Installs dependencies from `requirements.txt`.
+   - Runs Django migration integrity check (`makemigrations --check --dry-run`).
+   - Executes Pytest suite with XML & term-missing coverage reports.
+   - Conditionally executes trial Docker container builds (`test-build-docker: true`).
+   - Uploads code coverage report artifacts.
+2. **`template-infra.yml`** (`.github/workflows/templates/template-infra.yml`):
+   - Authenticates to Azure CLI using Azure credentials.
+   - Initializes HashiCorp Terraform (`hashicorp/setup-terraform@v3`).
+   - Executes `terraform init`, `terraform plan`, and `terraform apply -auto-approve` using environment secrets.
+3. **`template-code-deploy.yml`** (`.github/workflows/templates/template-code-deploy.yml`):
+   - Authenticates to Azure Container Registry (`az acr login`).
+   - Builds and tags production Docker images with `${{ github.sha }}` and `latest`.
+   - Pushes image to ACR and deploys container to Azure Web App for Containers (`azure/webapps-deploy@v2`).
+
+### Active GitHub Actions Pipelines (Invoking Templates)
+- `.github/workflows/pipeline-pr-validation.yml`: Invokes `template-test.yml` with `test-build-docker: true`.
+- `.github/workflows/pipeline-code-testing.yml`: Invokes `template-test.yml` with `test-build-docker: false`.
+- `.github/workflows/pipeline-infra.yml`: Invokes `template-infra.yml` passing Azure secrets and workspace settings.
+- `.github/workflows/pipeline-code.yml`: Invokes `template-code-deploy.yml` passing ACR & Web App inputs.
+
+---
+
 ## 🧱 Azure DevOps Templatisation (`pipelines/`)
 
-Azure DevOps pipelines utilize reusable step templates defined in `pipelines/templates/`:
+Azure DevOps pipelines also utilize reusable step templates defined in `pipelines/templates/`:
 
 ### 1. `pipelines/templates/test-steps-template.yml`
 Configures Python 3.11, installs dependencies, verifies Django migrations (`makemigrations --check --dry-run`), executes `pytest` with JUnit XML output, and publishes code coverage results.
@@ -52,12 +81,3 @@ Logs into Azure Container Registry, builds Docker container images tagged with `
 - [pipelines/pipeline-infra.yml](pipelines/pipeline-infra.yml) (Infrastructure Provisioning)
 - [pipelines/pipeline-code.yml](pipelines/pipeline-code.yml) (Code Deployment)
 - [azure-pipelines.yml](azure-pipelines.yml) (Master CI/CD Orchestrator)
-
----
-
-## 🐙 GitHub Actions Workflows (`.github/workflows/`)
-
-- `.github/workflows/pipeline-pr-validation.yml`: Runs on PRs to `main`/`master`/`develop`.
-- `.github/workflows/pipeline-code-testing.yml`: Runs automated tests on push/PR across all branches.
-- `.github/workflows/pipeline-infra.yml`: Runs Terraform init & apply when files in `infrastructure/` change.
-- `.github/workflows/pipeline-code.yml`: Builds Docker container & deploys to Azure Web App automatically post-merge.
