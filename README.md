@@ -23,7 +23,7 @@ The platform powers customer product helpdesks, onboarding widgets, and AI chat 
 
 ---
 
-## � Documentation Hub
+## 📚 Documentation Hub
 
 For in-depth guides and detailed technical specifications, explore the modules in the [docs](docs) directory:
 
