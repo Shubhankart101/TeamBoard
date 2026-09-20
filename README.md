@@ -70,7 +70,7 @@ TeamBoard hosts backend technical Knowledge Base entries (spanning APIs, Databas
 - **Automated Profile & API Key Creation:** Uses Django `post_save` signals on the `User` model to automatically instantiate a `Company` record and generate a 32-character URL-safe API key (`secrets.token_urlsafe(32)`).
 - **Interactive Swagger UI & ReDoc:** Built-in OpenAPI 3.0 schema generation using `drf-spectacular` with typed request/response schemas and interactive API testing.
 - **Modular Terraform Architecture:** Structured with reusable child modules (`modules/container_registry`, `modules/postgresql`, `modules/app_service`) and separated root declarations (`providers.tf`, `variables.tf`, `outputs.tf`, `main.tf`).
-- **Templatized Pipelines & Separation of Duties:** Independent CI/CD pipelines for **Code Testing**, **Infrastructure Provisioning**, and **Code Deployment**, built using reusable steps templates in both GitHub Actions and Azure DevOps.
+- **Templatized GitHub Actions Pipelines:** Independent CI/CD pipelines for **PR Validation**, **Code Testing**, **Infrastructure Provisioning**, and **Code Deployment**, built using reusable workflow templates in GitHub Actions.
 - **Automated Testing Suite:** Pytest-driven test suite with `pytest-django` and `pytest-cov`, maintaining 97%+ code coverage.
 
 ---
@@ -121,15 +121,6 @@ TeamBoard/
 │   ├── terraform.tfvars              # Configured Terraform Variable Values file
 │   ├── terraform.tfvars.example      # Example Terraform Variable template file
 │   └── variables.tf                  # Root Input Variable definitions
-├── pipelines/
-│   ├── templates/                    # Reusable Pipeline Step Templates (Azure DevOps)
-│   │   ├── docker-deploy-steps-template.yml # Template: Container build & Web App deploy
-│   │   ├── terraform-steps-template.yml     # Template: Terraform init & apply
-│   │   └── test-steps-template.yml          # Template: Python setup, Pytest & coverage
-│   ├── pipeline-pr-validation.yml    # Separate Pipeline: PR Validation Gate
-│   ├── pipeline-code-testing.yml     # Separate Pipeline: Automated Code Testing
-│   ├── pipeline-infra.yml            # Separate Pipeline: Infrastructure Provisioning
-│   └── pipeline-code.yml             # Separate Pipeline: Code Deployment
 ├── teamboard/
 │   ├── asgi.py                       # ASGI configuration
 │   ├── settings.py                   # Django settings, SimpleJWT & drf-spectacular config
@@ -138,8 +129,6 @@ TeamBoard/
 ├── .dockerignore                     # Files excluded from Docker builds
 ├── .env.example                      # Environment variables template
 ├── .gitignore                        # Git ignore patterns
-├── azure-pipelines.yml               # Master Orchestrator Pipeline (Azure DevOps)
-├── azure-pipelines-test.yml          # Test Runner Pipeline (Azure DevOps)
 ├── docker-compose.yml                # Multi-container orchestration (Django + PostgreSQL)
 ├── Dockerfile                        # Production-ready Python Docker container image
 ├── manage.py                         # Django administrative CLI
@@ -388,21 +377,13 @@ GitHub Actions pipelines leverage reusable workflow templates defined in `.githu
 
 ---
 
-### 3. Decoupled Pipelines Invoking Templates
+### 3. Decoupled Pipelines Invoking Reusable Workflows
 
 - **GitHub Actions Workflows (`.github/workflows/`)**:
   - `pipeline-pr-validation.yml`: Pre-merge quality gate (invokes `reusable-test.yml` with `test-build-docker: true`).
   - `pipeline-code-testing.yml`: Independent automated testing pipeline (invokes `reusable-test.yml`).
   - `pipeline-infra.yml`: Independent infrastructure pipeline (invokes `reusable-infra.yml`).
   - `pipeline-code.yml`: Independent container deployment pipeline (invokes `reusable-code-deploy.yml`).
-- **Azure DevOps Pipelines (`pipelines/` & root)**:
-  - `pipelines/pipeline-pr-validation.yml`: Independent PR validation gate (invokes `test-steps-template.yml`).
-  - `pipelines/pipeline-code-testing.yml`: Independent test pipeline (invokes `test-steps-template.yml`).
-  - `pipelines/pipeline-infra.yml`: Independent infra pipeline (invokes `terraform-steps-template.yml`).
-  - `pipelines/pipeline-code.yml`: Independent code deployment pipeline (invokes `docker-deploy-steps-template.yml`).
-  - `azure-pipelines.yml`: Master CI/CD orchestrator pipeline.
-  - `pipelines/pipeline-code.yml`: Independent code deployment pipeline.
-  - `azure-pipelines.yml`: Master CI/CD orchestrator pipeline combining all stages.
 
 ---
 
