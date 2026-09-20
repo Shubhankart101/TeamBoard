@@ -23,8 +23,21 @@ The platform powers customer product helpdesks, onboarding widgets, and AI chat 
 
 ---
 
+## � Documentation Hub
+
+For in-depth guides and detailed technical specifications, explore the modules in the [docs](docs) directory:
+
+- 🎯 **[docs/architecture.md](docs/architecture.md)** — System Architecture, Sequence Diagrams, Security & Business Logic Guarantees, Data Models & Signal Flow.
+- 📡 **[docs/api-reference.md](docs/api-reference.md)** — OpenAPI/Swagger Endpoints, Typed Schemas, Request/Response Payloads & Postman Collection Scenarios.
+- 🛠️ **[docs/setup-and-testing.md](docs/setup-and-testing.md)** — Environment Variables, Local Quick Start, Docker Compose & Pytest Coverage Metrics.
+- 🏗️ **[docs/infrastructure.md](docs/infrastructure.md)** — Modular Infrastructure as Code (Terraform on Azure), Child Modules Breakdown & Execution Guide.
+- 🔄 **[docs/cicd-pipelines.md](docs/cicd-pipelines.md)** — PR Quality Gates, Decoupled Pipeline Architecture, Step Templates & Multi-Cloud Workflows.
+
+---
+
 ## 📋 Table of Contents
 
+- [📚 Documentation Hub](#-documentation-hub)
 - [🎯 Scenario \& System Architecture](#-scenario--system-architecture)
 - [✨ Key Features](#-key-features)
 - [📁 Project Directory Structure](#-project-directory-structure)
