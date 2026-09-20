@@ -20,24 +20,22 @@ TeamBoard separates CI/CD responsibilities into distinct, decoupled GitHub Actio
 ## 🔁 Automated Execution & PR Validation Lifecycle
 
 ```mermaid
-stateDiagram-v2
-    [*] --> PullRequestOpened: Developer opens Pull Request
-    PullRequestOpened --> PRValidationPipeline: Trigger PR Validation Workflow
-    PRValidationPipeline --> ReusableTestTemplate: Call reusable-test.yml (test-build-docker: true)
-    ReusableTestTemplate --> VerifyMigrations: 1. Verify Django migrations (--check --dry-run)
-    VerifyMigrations --> RunPytest: 2. Run Pytest suite & coverage
-    RunPytest --> BuildTestDocker: 3. Execute trial Docker container build
-    BuildTestDocker --> UploadArtifacts: 4. Upload coverage report artifact
-    UploadArtifacts --> ChecksPassed: All checks pass successfully
-    UploadArtifacts --> ChecksFailed: Migration or test error detected
-    ChecksFailed --> DeveloperFixes: Developer fixes issues & pushes code
-    DeveloperFixes --> PullRequestOpened: Trigger re-validation
-    ChecksPassed --> MaintainerMerge: Maintainer merges PR to main branch
-    MaintainerMerge --> CodeDeployPipeline: Trigger Post-Merge Deployment Workflow
-    CodeDeployPipeline --> ReusableDeployTemplate: Call reusable-code-deploy.yml
-    ReusableDeployTemplate --> AzureACR: Build & push Docker image to ACR
-    AzureACR --> AzureWebApp: Update Azure App Service for Containers live
-    AzureWebApp --> [*]: Release Complete
+flowchart TD
+    A([Developer opens Pull Request]) --> B[Trigger PR Validation Workflow]
+    B --> C[Call reusable-test.yml]
+    C --> D[1. Verify Django migrations]
+    D --> E[2. Run Pytest suite & coverage]
+    E --> F[3. Execute trial Docker container build]
+    F --> G[4. Upload coverage report artifact]
+    G --> H{All checks pass?}
+    H -->|No| I[Developer fixes issues & pushes code]
+    I --> A
+    H -->|Yes| J[Maintainer merges PR to main]
+    J --> K[Trigger Post-Merge Deployment Workflow]
+    K --> L[Call reusable-code-deploy.yml]
+    L --> M[Build & push Docker image to ACR]
+    M --> N[Update Azure App Service for Containers]
+    N --> O([Release Complete])
 ```
 
 ---
