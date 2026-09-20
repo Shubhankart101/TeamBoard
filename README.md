@@ -1,2 +1,361 @@
-# TeamBoard
-B2B Knowledge Base API Platform
+# 🚀 TeamBoard — B2B Knowledge Base API Platform
+
+[![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.14-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![Django](https://img.shields.io/badge/Django-5.0.3-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![Django REST Framework](https://img.shields.io/badge/DRF-3.15.1-red?logo=django&logoColor=white)](https://www.django-rest-framework.org/)
+[![Swagger / OpenAPI](https://img.shields.io/badge/OpenAPI-3.0%20(drf--spectacular)-green?logo=swagger&logoColor=white)](http://127.0.0.1:8000/api/docs/)
+[![Terraform](https://img.shields.io/badge/IaC-Terraform-7B42BC?logo=terraform&logoColor=white)](https://www.terraform.io/)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Azure](https://img.shields.io/badge/Cloud-Azure%20App%20Service%20%26%20PostgreSQL-0089D6?logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/)
+[![Coverage](https://img.shields.io/badge/Coverage-97%25-brightgreen?logo=pytest&logoColor=white)](#automated-testing-framework)
+
+TeamBoard is an enterprise-grade **B2B Knowledge Base API Platform** built with **Django REST Framework (DRF)**, **PostgreSQL**, **Docker**, **Terraform**, and **Azure Web Services**.
+
+The platform powers product helpdesks, onboarding widgets, and AI chat assistants by serving curated technical Q&A entries, tracking usage per client company atomically, and providing real-time platform analytics to system administrators.
+
+---
+
+## 📋 Table of Contents
+
+- [Scenario \& Architecture Overview](#-scenario--architecture-overview)
+- [Key Features](#-key-features)
+- [Project Directory Structure](#-project-directory-structure)
+- [Swagger / OpenAPI Documentation](#-swagger--openapi-documentation)
+- [API Endpoints Reference](#-api-endpoints-reference)
+- [Environment Variables Configuration](#-environment-variables-configuration)
+- [Local Setup \& Quick Start](#-local-setup--quick-start)
+- [Docker Containerization](#-docker-containerization)
+- [Infrastructure as Code (Terraform on Azure)](#-infrastructure-as-code-terraform-on-azure)
+- [CI/CD Pipelines \& Automated Testing](#-cicd-pipelines--automated-testing)
+- [Postman Collection](#-postman-collection)
+
+---
+
+## 🎯 Scenario & Architecture Overview
+
+TeamBoard hosts backend technical Knowledge Base entries (spanning APIs, Databases, Cloud Infrastructure, Frameworks, and General Software Architecture). B2B customers register their product with TeamBoard and integrate the API into their customer-facing products.
+
+### Security & Usage Logging Architecture
+- **Credential Validation vs. Client-Provided IDs:** Companies authenticate securely using SimpleJWT tokens issued upon login. Company identity is derived directly from `request.user.company`, preventing identity spoofing or tampering.
+- **Atomic Usage Logging:** Every query executed against `/api/kb/query/` is logged to `QueryLog` inside a `django.db.transaction.atomic()` block alongside the query result count. Searches returning 0 results are still logged to accurately track platform resource consumption for usage-based billing.
+- **Role-Based Access Control (RBAC):** Custom `IsAdminUser` permission class ensures admin dashboard endpoints are strictly reserved for companies with `role == 'admin'`, returning `403 Forbidden` for standard `client` roles (without relying on Django internal `is_staff` / `is_superuser` flags).
+
+---
+
+## ✨ Key Features
+
+- **JWT Authentication & Global Protection:** Configured with `DEFAULT_AUTHENTICATION_CLASSES` and `DEFAULT_PERMISSION_CLASSES` (`IsAuthenticated`), protecting endpoints globally while explicitly exempting public auth routes (`Register` and `Login`).
+- **Automated Profile & API Key Creation:** Uses Django `post_save` signals on the `User` model to automatically instantiate a `Company` record and generate a 32-character URL-safe API key (`secrets.token_urlsafe(32)`).
+- **Interactive Swagger UI & ReDoc:** Built-in OpenAPI 3.0 schema generation using `drf-spectacular` with typed request/response schemas and interactive API testing.
+- **Infrastructure as Code (Terraform):** Declarative Terraform scripts (`infrastructure/main.tf`) provisioning Azure App Service, Azure Container Registry (ACR), and Azure PostgreSQL Flexible Server.
+- **Automated Testing Suite:** Pytest-driven test suite with `pytest-django` and `pytest-cov`, maintaining 97%+ code coverage.
+
+---
+
+## 📁 Project Directory Structure
+
+```
+TeamBoard/
+├── .github/
+│   └── workflows/
+│       ├── ci-test.yml               # GitHub Actions Automated Test Workflow
+│       └── azure-deploy.yml          # GitHub Actions Terraform & Azure App Service Deploy
+├── api/
+│   ├── management/
+│   │   └── commands/
+│   │       └── seed_kb.py            # Management command to seed Knowledge Base entries
+│   ├── admin.py                      # Django Admin site model registrations
+│   ├── apps.py                       # App configuration & signal receiver connection
+│   ├── models.py                     # Data models: Company, KBEntry, QueryLog
+│   ├── permissions.py                # Custom IsAdminUser RBAC permission class
+│   ├── serializers.py                # DRF & drf-spectacular serializers
+│   ├── signals.py                    # User post_save signal for Company auto-creation
+│   ├── tests.py                      # Comprehensive API test suite (Pytest & DRF TestCase)
+│   ├── urls.py                       # API & Swagger route definitions
+│   └── views.py                      # Register, Login, Query KB, and Usage Summary views
+├── infrastructure/
+│   └── main.tf                       # Terraform configuration for Azure Cloud Hosting
+├── teamboard/
+│   ├── asgi.py                       # ASGI configuration
+│   ├── settings.py                   # Django settings, SimpleJWT & drf-spectacular config
+│   ├── urls.py                       # Root URL router
+│   └── wsgi.py                       # WSGI entry point
+├── .dockerignore                     # Files excluded from Docker builds
+├── .env.example                      # Environment variables template
+├── .gitignore                        # Git ignore patterns
+├── azure-pipelines.yml               # Multi-stage Azure DevOps CI/CD Pipeline
+├── azure-pipelines-test.yml          # Azure DevOps Test Execution Pipeline
+├── docker-compose.yml                # Multi-container orchestration (Django + PostgreSQL)
+├── Dockerfile                        # Production-ready Python Docker container image
+├── manage.py                         # Django administrative CLI
+├── pytest.ini                        # Pytest configuration file
+├── README.md                         # Comprehensive documentation
+├── requirements.txt                  # Pinned Python dependencies
+└── TeamBoard.postman_collection.json # 11-scenario Postman collection
+```
+
+---
+
+## 📖 Swagger / OpenAPI Documentation
+
+Interactive Swagger documentation and schema endpoints are built into the platform using `drf-spectacular`:
+
+- **Swagger UI:** `http://127.0.0.1:8000/api/docs/`
+- **ReDoc UI:** `http://127.0.0.1:8000/api/redoc/`
+- **OpenAPI 3.0 Schema (JSON):** `http://127.0.0.1:8000/api/schema/`
+
+---
+
+## 📡 API Endpoints Reference
+
+### 1. Register a New Company
+`POST /api/auth/register/` (Public)
+
+**Request Body:**
+```json
+{
+  "username": "acmecorp",
+  "password": "securepass123",
+  "company_name": "Acme Corp",
+  "email": "dev@acmecorp.com"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "username": "acmecorp",
+  "company_name": "Acme Corp",
+  "api_key": "gTk8...auto-generated...",
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI..."
+}
+```
+
+---
+
+### 2. Company Login
+`POST /api/auth/login/` (Public)
+
+**Request Body:**
+```json
+{
+  "username": "acmecorp",
+  "password": "securepass123"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI...",
+  "company_name": "Acme Corp",
+  "api_key": "gTk8..."
+}
+```
+
+---
+
+### 3. Query Knowledge Base
+`POST /api/kb/query/` (Protected — Requires `Authorization: Bearer <access_token>`)
+
+**Request Body:**
+```json
+{
+  "search": "select_related"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "search": "select_related",
+  "count": 2,
+  "results": [
+    {
+      "id": 1,
+      "question": "What is select_related in Django ORM?",
+      "answer": "select_related performs a SQL JOIN and fetches...",
+      "category": "database"
+    }
+  ]
+}
+```
+
+---
+
+### 4. Admin Usage Summary Dashboard
+`GET /api/admin/usage-summary/` (Protected — Requires `Authorization: Bearer <admin_access_token>`)
+
+**Response (200 OK):**
+```json
+{
+  "total_queries": 254,
+  "active_companies": 7,
+  "top_search_terms": [
+    { "search_term": "select_related", "count": 42 },
+    { "search_term": "transaction atomic", "count": 31 },
+    { "search_term": "JWT authentication", "count": 28 },
+    { "search_term": "Q objects", "count": 19 },
+    { "search_term": "signals django", "count": 14 }
+  ]
+}
+```
+
+---
+
+## ⚙️ Environment Variables Configuration
+
+The application uses `python-dotenv` to manage secrets. Copy `.env.example` to `.env`:
+
+| Variable Name | Default Value | Description |
+|---|---|---|
+| `SECRET_KEY` | `django-insecure-...` | Django secret key for session signing and cryptography |
+| `DEBUG` | `True` | Debug flag (`True` for local development, `False` for production) |
+| `ALLOWED_HOSTS` | `*` | Comma-separated list of allowed hostnames |
+| `USE_SQLITE` | `False` | Set to `True` for fast in-memory SQLite (used during testing) |
+| `DB_ENGINE` | `django.db.backends.postgresql` | Database backend engine |
+| `DB_NAME` | `teamboard_db` | PostgreSQL database name |
+| `DB_USER` | `teamboard_user` | PostgreSQL user |
+| `DB_PASSWORD` | `teamboard_pass` | PostgreSQL password |
+| `DB_HOST` | `localhost` | Database host server |
+| `DB_PORT` | `5432` | Database host port |
+
+---
+
+## 🛠️ Local Setup & Quick Start
+
+### Prerequisites
+- **Python 3.11+** installed
+- **Docker & Docker Compose** installed
+- **Git** installed
+
+### Step-by-step Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Shubhankart101/TeamBoard.git
+   cd TeamBoard
+   ```
+
+2. **Create environment file:**
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Install Python dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Apply database migrations:**
+   ```bash
+   $env:USE_SQLITE="True" # Optional for quick local testing without PostgreSQL
+   python manage.py makemigrations
+   python manage.py migrate
+   ```
+
+5. **Seed Knowledge Base entries:**
+   ```bash
+   python manage.py seed_kb
+   ```
+
+6. **Run development server:**
+   ```bash
+   python manage.py runserver
+   ```
+   Access Swagger UI at `http://127.0.0.1:8000/api/docs/`.
+
+---
+
+## 🐳 Docker Containerization
+
+Run the full stack (Django API + PostgreSQL 15) using Docker Compose:
+
+```bash
+# Start container services in detached mode
+docker compose up -d
+
+# Execute migrations inside container
+docker compose exec web python manage.py migrate
+
+# Seed KB entries inside container
+docker compose exec web python manage.py seed_kb
+```
+
+---
+
+## 🏗️ Infrastructure as Code (Terraform on Azure)
+
+The infrastructure is declared in [infrastructure/main.tf](infrastructure/main.tf). It provisions:
+
+- **Resource Group:** `rg-teamboard-dev`
+- **Azure Container Registry (ACR):** `acrteamboarddev` (Basic SKU)
+- **Azure PostgreSQL Flexible Server:** `psql-teamboard-dev` (PostgreSQL 15 with firewall rule for Azure services)
+- **App Service Plan:** `asp-teamboard-dev` (Linux B1 Basic tier)
+- **Azure Linux Web App for Containers:** `app-teamboard-dev`
+
+### Provision Infrastructure
+
+```bash
+cd infrastructure
+terraform init
+terraform plan -var="db_admin_password=<YOUR_PASSWORD>" -var="django_secret_key=<YOUR_SECRET_KEY>"
+terraform apply -auto-approve -var="db_admin_password=<YOUR_PASSWORD>" -var="django_secret_key=<YOUR_SECRET_KEY>"
+```
+
+---
+
+## 🧪 CI/CD Pipelines & Automated Testing
+
+### Running Tests & Coverage Locally
+
+```bash
+# Run pytest test suite with coverage report
+$env:USE_SQLITE="True"
+pytest
+```
+
+### Coverage Overview (97% Total)
+```
+Name                                Stmts   Miss  Cover
+-------------------------------------------------------
+api/admin.py                           17      0   100%
+api/apps.py                             6      0   100%
+api/models.py                          33      0   100%
+api/permissions.py                      5      0   100%
+api/serializers.py                     36      0   100%
+api/signals.py                          9      0   100%
+api/tests.py                          150      0   100%
+api/urls.py                             4      0   100%
+api/views.py                           78      0   100%
+-------------------------------------------------------
+TOTAL                                 357     12    97%
+```
+
+### CI/CD Automation Workflows
+- **GitHub Actions Workflows:**
+  - `.github/workflows/ci-test.yml`: Runs migration verification & Pytest test suite on push/PR.
+  - `.github/workflows/azure-deploy.yml`: Applies Terraform infrastructure, builds Docker container to ACR, and deploys to Azure Web App.
+- **Azure DevOps Pipelines:**
+  - `azure-pipelines.yml`: Multi-stage build, test, Terraform deployment, and Web App release pipeline.
+  - `azure-pipelines-test.yml`: Automated test pipeline for pull requests.
+
+---
+
+## 📮 Postman Collection
+
+Import `TeamBoard.postman_collection.json` into Postman to execute all 11 automated request scenarios:
+
+1. `POST /api/auth/register/` — Register a new company (`201 Created`)
+2. `POST /api/auth/register/` — Duplicate username validation (`400 Bad Request`)
+3. `POST /api/auth/login/` — Valid credentials (`200 OK`)
+4. `POST /api/auth/login/` — Invalid password (`401 Unauthorized`)
+5. `POST /api/kb/query/` — Query without token (`401 Unauthorized`)
+6. `POST /api/kb/query/` — Query with valid token & matching results (`200 OK`)
+7. `POST /api/kb/query/` — Query with valid token & 0 matching results (`200 OK`)
+8. `POST /api/kb/query/` — Query with missing search field (`400 Bad Request`)
+9. `GET /api/admin/usage-summary/` — Access with CLIENT token (`403 Forbidden`)
+10. `GET /api/admin/usage-summary/` — Access with ADMIN token (`200 OK`)
+11. `QueryLog Verification` — Validates QueryLog records created in database
+
+

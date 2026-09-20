@@ -1,0 +1,113 @@
+name: TeamBoard-CI-CD-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - main
+      - master
+      - develop
+
+pr:
+  branches:
+    include:
+      - main
+      - master
+
+variables:
+  azureServiceConnection: 'Azure-Subscription-ServiceConnection'
+  resourceGroupName: 'rg-teamboard-dev'
+  location: 'eastus'
+  appName: 'teamboard'
+  environment: 'dev'
+  containerRegistryName: 'acrteamboarddev'
+  webAppName: 'app-teamboard-dev'
+  pythonVersion: '3.11'
+
+stages:
+  - stage: Test
+    displayName: 'Automated Testing & Quality Checks'
+    jobs:
+      - job: RunTests
+        displayName: 'Run Pytest & Coverage'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '$(pythonVersion)'
+            displayName: 'Use Python $(pythonVersion)'
+
+          - script: |
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt
+            displayName: 'Install Dependencies'
+
+          - script: |
+              export USE_SQLITE=True
+              pytest --junitxml=test-results.xml --cov=api --cov-report=xml:coverage.xml
+            displayName: 'Run Pytest Suite'
+
+          - task: PublishTestResults@2
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFiles: 'test-results.xml'
+              testRunTitle: 'TeamBoard API Unit & Integration Tests'
+            displayName: 'Publish Test Results'
+
+          - task: PublishCodeCoverageResults@2
+            condition: succeededOrFailed()
+            inputs:
+              summaryFileLocation: 'coverage.xml'
+            displayName: 'Publish Code Coverage'
+
+  - stage: Infrastructure
+    displayName: 'Provision Azure Infrastructure via Terraform'
+    dependsOn: Test
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: ProvisionTerraform
+        displayName: 'Deploy Azure Infrastructure using Terraform'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: AzureCLI@2
+            displayName: 'Terraform Init & Apply'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                cd infrastructure
+                terraform init
+                terraform apply -auto-approve \
+                  -var="db_admin_password=$(DB_ADMIN_PASSWORD)" \
+                  -var="django_secret_key=$(DJANGO_SECRET_KEY)"
+
+  - stage: BuildAndDeploy
+    displayName: 'Build & Deploy Container to Azure'
+    dependsOn: Infrastructure
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: BuildContainerAndDeploy
+        displayName: 'Build Docker Image & Update Web App'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: AzureCLI@2
+            displayName: 'Build & Push Docker Image to ACR'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az acr login --name $(containerRegistryName)
+                docker build -t $(containerRegistryName).azurecr.io/$(appName):$(Build.BuildId) -t $(containerRegistryName).azurecr.io/$(appName):latest .
+                docker push $(containerRegistryName).azurecr.io/$(appName):$(Build.BuildId)
+                docker push $(containerRegistryName).azurecr.io/$(appName):latest
+
+          - task: AzureWebAppContainer@1
+            displayName: 'Deploy Container to Azure Web App'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              appName: '$(webAppName)'
+              containers: '$(containerRegistryName).azurecr.io/$(appName):latest'

@@ -1,0 +1,53 @@
+name: TeamBoard-Test-Pipeline-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - '*'
+
+pr:
+  branches:
+    include:
+      - '*'
+
+variables:
+  pythonVersion: '3.11'
+
+jobs:
+  - job: AutomatedTestRunner
+    displayName: 'Automated Test Framework Execution'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '$(pythonVersion)'
+        displayName: 'Use Python $(pythonVersion)'
+
+      - script: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+        displayName: 'Install Dependencies'
+
+      - script: |
+          export USE_SQLITE=True
+          python manage.py makemigrations --check --dry-run
+        displayName: 'Check Django Migrations'
+
+      - script: |
+          export USE_SQLITE=True
+          pytest --junitxml=test-results.xml --cov=api --cov-report=xml:coverage.xml --cov-report=html
+        displayName: 'Execute Pytest Suite with Coverage'
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFiles: 'test-results.xml'
+          testRunTitle: 'TeamBoard API Automated Tests'
+        displayName: 'Publish Test Results'
+
+      - task: PublishCodeCoverageResults@2
+        condition: succeededOrFailed()
+        inputs:
+          summaryFileLocation: 'coverage.xml'
+        displayName: 'Publish Code Coverage Results'
