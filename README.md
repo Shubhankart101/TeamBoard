@@ -1,5 +1,9 @@
 # 🚀 TeamBoard — B2B Knowledge Base API Platform
 
+<div align="center">
+
+[![GitHub Repository](https://img.shields.io/badge/GitHub-View_Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Shubhankart101/TeamBoard)
+
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.14-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/Django-5.0.3-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![Django REST Framework](https://img.shields.io/badge/DRF-3.15.1-red?logo=django&logoColor=white)](https://www.django-rest-framework.org/)
@@ -7,27 +11,32 @@
 [![Terraform Modules](https://img.shields.io/badge/IaC-Terraform%20Modules-7B42BC?logo=terraform&logoColor=white)](https://www.terraform.io/)
 [![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![Azure](https://img.shields.io/badge/Cloud-Azure%20App%20Service%20%26%20PostgreSQL-0089D6?logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/)
-[![Coverage](https://img.shields.io/badge/Coverage-97%25-brightgreen?logo=pytest&logoColor=white)](#automated-testing-framework)
+[![Coverage](https://img.shields.io/badge/Coverage-97%25-brightgreen?logo=pytest&logoColor=white)](#-automated-testing-framework)
 
-TeamBoard is an enterprise-grade **B2B Knowledge Base API Platform** built with **Django REST Framework (DRF)**, **PostgreSQL**, **Docker**, **Modular Terraform**, **Azure Services**, and **Templatized CI/CD Pipelines**.
+</div>
 
-The platform powers product helpdesks, onboarding widgets, and AI chat assistants by serving curated technical Q&A entries, tracking usage per client company atomically, and providing real-time platform analytics to system administrators.
+---
+
+TeamBoard is an enterprise-grade **B2B Knowledge Base API Platform** built with **Django REST Framework (DRF)**, **PostgreSQL**, **Docker**, **Modular Terraform**, **Azure Cloud Services**, and **Templatized CI/CD Pipelines**.
+
+The platform powers customer product helpdesks, onboarding widgets, and AI chat assistants by serving curated technical Q&A entries, tracking usage per client company atomically, and providing real-time platform analytics to system administrators.
 
 ---
 
 ## 📋 Table of Contents
 
-- [Scenario \& Architecture Overview](#-scenario--architecture-overview)
-- [Key Features](#-key-features)
-- [Project Directory Structure](#-project-directory-structure)
-- [Swagger / OpenAPI Documentation](#-swagger--openapi-documentation)
-- [API Endpoints Reference](#-api-endpoints-reference)
-- [Environment Variables Configuration](#-environment-variables-configuration)
-- [Local Setup \& Quick Start](#-local-setup--quick-start)
-- [Docker Containerization](#-docker-containerization)
-- [Modular Infrastructure as Code (Terraform on Azure)](#-modular-infrastructure-as-code-terraform-on-azure)
-- [Templatized CI/CD Pipelines \& Automated Testing](#-templatized-cicd-pipelines--automated-testing)
-- [Postman Collection](#-postman-collection)
+- [🎯 Scenario \& System Architecture](#-scenario--system-architecture)
+- [✨ Key Features](#-key-features)
+- [📁 Project Directory Structure](#-project-directory-structure)
+- [📖 Swagger / OpenAPI Documentation](#-swagger--openapi-documentation)
+- [📡 API Endpoints Reference](#-api-endpoints-reference)
+- [⚙️ Environment Variables Configuration](#-environment-variables-configuration)
+- [🛠️ Local Setup \& Quick Start](#-local-setup--quick-start)
+- [🐳 Docker Containerization](#-docker-containerization)
+- [🏗️ Modular Infrastructure as Code (Terraform on Azure)](#-modular-infrastructure-as-code-terraform-on-azure)
+- [🔄 Templatized CI/CD Pipelines \& PR Quality Gates](#-templatized-cicd-pipelines--pr-quality-gates)
+- [🧪 Automated Testing Framework](#-automated-testing-framework)
+- [📮 Postman Collection Scenarios](#-postman-collection-scenarios)
 
 ---
 
@@ -59,9 +68,10 @@ TeamBoard hosts backend technical Knowledge Base entries (spanning APIs, Databas
 TeamBoard/
 ├── .github/
 │   └── workflows/
-│       ├── pipeline-code-testing.yml # Pipeline: Automated Testing (GitHub Actions)
-│       ├── pipeline-infra.yml        # Pipeline: Infrastructure Provisioning (GitHub Actions)
-│       └── pipeline-code.yml         # Pipeline: Code Build & Container Deploy (GitHub Actions)
+│       ├── pipeline-pr-validation.yml# PR Pre-Merge Quality Gate Workflow (GitHub Actions)
+│       ├── pipeline-code-testing.yml # Automated Testing Workflow (GitHub Actions)
+│       ├── pipeline-infra.yml        # Infrastructure Provisioning Workflow (GitHub Actions)
+│       └── pipeline-code.yml         # Container Build & Deploy Workflow (GitHub Actions)
 ├── api/
 │   ├── management/
 │   │   └── commands/
@@ -85,20 +95,22 @@ TeamBoard/
 │   │   │   ├── main.tf
 │   │   │   ├── outputs.tf
 │   │   │   └── variables.tf
-│   │   └── postgresql/               # Module: Azure PostgreSQL Flexible Server & Database
+│   │   └── postgresql/               # Module: Azure PostgreSQL Flexible Server & DB
 │   │       ├── main.tf
 │   │       ├── outputs.tf
 │   │       └── variables.tf
 │   ├── main.tf                       # Terraform Root Module (Module orchestrator)
 │   ├── outputs.tf                    # Root Output Variables
 │   ├── providers.tf                  # Provider configuration (azurerm & version lock)
-│   ├── terraform.tfvars.example      # Example Terraform Variable input file
+│   ├── terraform.tfvars              # Configured Terraform Variable Values file
+│   ├── terraform.tfvars.example      # Example Terraform Variable template file
 │   └── variables.tf                  # Root Input Variable definitions
 ├── pipelines/
 │   ├── templates/                    # Reusable Pipeline Step Templates (Azure DevOps)
-│   │   ├── docker-deploy-steps-template.yml # Template: Container build, push & Web App deploy
+│   │   ├── docker-deploy-steps-template.yml # Template: Container build & Web App deploy
 │   │   ├── terraform-steps-template.yml     # Template: Terraform init & apply
 │   │   └── test-steps-template.yml          # Template: Python setup, Pytest & coverage
+│   ├── pipeline-pr-validation.yml    # Separate Pipeline: PR Validation Gate
 │   ├── pipeline-code-testing.yml     # Separate Pipeline: Automated Code Testing
 │   ├── pipeline-infra.yml            # Separate Pipeline: Infrastructure Provisioning
 │   └── pipeline-code.yml             # Separate Pipeline: Code Deployment
