@@ -8,18 +8,19 @@ This document details local development environment configuration, environment v
 
 The application uses `python-dotenv` to manage secrets and environment flags. Copy [.env.example](.env.example) to `.env` in the root directory:
 
+`SECRET_KEY` is always required. `DB_*` variables are required unless `USE_SQLITE=True`. The app refuses to start (`ImproperlyConfigured`) if a required variable is missing.
+
 | Variable Name | Type | Default Value | Description & Production Guidance |
 |---|---|---|---|
-| `SECRET_KEY` | String | `django-insecure-...` | Cryptographic signing key for sessions & JWT tokens. Set a random 50+ char secret in production. |
+| `SECRET_KEY` | String | **Required** | Cryptographic signing key for sessions & JWT tokens. Set a random 50+ char secret in production. |
 | `DEBUG` | Boolean | `True` | Debug mode. Must be set to `False` in production to prevent technical stack trace exposure. |
 | `ALLOWED_HOSTS` | List | `*` | Comma-separated domain names or IP addresses allowed to serve the Django app. |
 | `USE_SQLITE` | Boolean | `False` | When set to `True` or `1`, overrides PostgreSQL configuration with an in-memory SQLite database (used during local Pytest runs). |
-| `DB_ENGINE` | String | `django.db.backends.postgresql` | Django database backend driver. |
-| `DB_NAME` | String | `teamboard_db` | Name of the target PostgreSQL database. |
-| `DB_USER` | String | `teamboard_user` | User account for PostgreSQL database access. |
-| `DB_PASSWORD` | String | `teamboard_pass` | Password for PostgreSQL database user. |
-| `DB_HOST` | String | `localhost` | Host address of PostgreSQL server (`db` inside Docker Compose). |
-| `DB_PORT` | Integer | `5432` | TCP port for PostgreSQL server connection. |
+| `DB_NAME` | String | **Required** | Name of the target PostgreSQL database. |
+| `DB_USER` | String | **Required** | User account for PostgreSQL database access. |
+| `DB_PASSWORD` | String | **Required** | Password for PostgreSQL database user. |
+| `DB_HOST` | String | **Required** | Host address of PostgreSQL server (`db` inside Docker Compose). |
+| `DB_PORT` | Integer | **Required** | TCP port for PostgreSQL server connection. |
 
 ---
 

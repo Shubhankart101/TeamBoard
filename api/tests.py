@@ -220,3 +220,13 @@ class TeamBoardAPITests(TestCase):
         self.assertEqual(len(response.data['top_search_terms']), 2)
         self.assertEqual(response.data['top_search_terms'][0]['search_term'], 'select_related')
         self.assertEqual(response.data['top_search_terms'][0]['count'], 2)
+
+    def test_11_usage_summary_no_token(self):
+        response = self.client.get('/api/admin/usage-summary/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_company_created_once_and_not_on_update(self):
+        user = User.objects.create_user(username='signaluser', password='securepass123')
+        user.first_name = 'Updated'
+        user.save()
+        self.assertEqual(Company.objects.filter(user=user).count(), 1)

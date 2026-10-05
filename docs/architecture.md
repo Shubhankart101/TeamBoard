@@ -152,9 +152,9 @@ Stores immutable usage records for platform analytics.
 
 TeamBoard uses Django signals to guarantee automated profile initialization:
 
-- **Signal Source:** `django.db.models.signals.post_save` on `django.contrib.auth.models.User`.
-- **Receiver Function:** `api.signals.create_company_profile`.
-- **Execution Condition:** Triggers when `created == True` or `instance._state.adding == True`.
+- **Signal Source:** `pre_save` + `post_save` on `django.contrib.auth.models.User`.
+- **Receiver Functions:** `api.signals.capture_user_adding_state` (pre_save) and `api.signals.create_company_profile` (post_save).
+- **Execution Condition:** Relies solely on `instance._state.adding`. Django resets this flag to `False` before `post_save` fires, so its value is captured in `pre_save` and consumed (then cleared) in `post_save`, guaranteeing a single `Company` per new `User`.
 - **Action:** Automatically generates a `Company` row associated with the new `User`, generating a cryptographically secure 32-character API key via Python's `secrets.token_urlsafe(32)`.
 - **App Module Connection:** Connected inside `api.apps.ApiConfig.ready()`.
 

@@ -1,14 +1,20 @@
 import secrets
-from django.db.models.signals import post_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 from .models import Company
 
 
+@receiver(pre_save, sender=User)
+def capture_user_adding_state(sender, instance, **kwargs):
+    # Django resets _state.adding to False before post_save fires, so capture it here.
+    instance._is_first_creation = instance._state.adding
+
+
 @receiver(post_save, sender=User)
-def create_company_profile(sender, instance, created, **kwargs):
-    # Detect user first creation (using created / instance._state.adding)
-    if created or getattr(getattr(instance, '_state', None), 'adding', False):
+def create_company_profile(sender, instance, **kwargs):
+    if getattr(instance, '_is_first_creation', False):
+        instance._is_first_creation = False
         Company.objects.create(
             user=instance,
             company_name=instance.email or instance.username,

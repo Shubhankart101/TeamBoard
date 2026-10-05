@@ -2,13 +2,22 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-teamboard-secret-key')
+
+def require_env(name):
+    value = os.getenv(name)
+    if not value:
+        raise ImproperlyConfigured(f"Required environment variable '{name}' is not set.")
+    return value
+
+
+SECRET_KEY = require_env('SECRET_KEY')
 
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
@@ -57,13 +66,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'teamboard.wsgi.application'
 
-DB_ENGINE = os.getenv('DB_ENGINE', 'django.db.backends.postgresql')
-DB_NAME = os.getenv('DB_NAME', 'teamboard_db')
-DB_USER = os.getenv('DB_USER', 'teamboard_user')
-DB_PASSWORD = os.getenv('DB_PASSWORD', 'teamboard_pass')
-DB_HOST = os.getenv('DB_HOST', 'localhost')
-DB_PORT = os.getenv('DB_PORT', '5432')
-
 if os.getenv('USE_SQLITE', 'False').lower() in ('true', '1'):
     DATABASES = {
         'default': {
@@ -74,12 +76,12 @@ if os.getenv('USE_SQLITE', 'False').lower() in ('true', '1'):
 else:
     DATABASES = {
         'default': {
-            'ENGINE': DB_ENGINE,
-            'NAME': DB_NAME,
-            'USER': DB_USER,
-            'PASSWORD': DB_PASSWORD,
-            'HOST': DB_HOST,
-            'PORT': DB_PORT,
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': require_env('DB_NAME'),
+            'USER': require_env('DB_USER'),
+            'PASSWORD': require_env('DB_PASSWORD'),
+            'HOST': require_env('DB_HOST'),
+            'PORT': require_env('DB_PORT'),
         }
     }
 

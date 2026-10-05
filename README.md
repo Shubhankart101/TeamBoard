@@ -251,18 +251,19 @@ Interactive Swagger documentation and schema endpoints are built into the platfo
 
 The application uses `python-dotenv` to manage secrets. Copy `.env.example` to `.env`:
 
+`SECRET_KEY` is always required; `DB_*` variables are required unless `USE_SQLITE=True`.
+
 | Variable Name | Default Value | Description |
 |---|---|---|
-| `SECRET_KEY` | `django-insecure-...` | Django secret key for session signing and cryptography |
+| `SECRET_KEY` | **Required** | Django secret key for session signing and cryptography |
 | `DEBUG` | `True` | Debug flag (`True` for local development, `False` for production) |
 | `ALLOWED_HOSTS` | `*` | Comma-separated list of allowed hostnames |
 | `USE_SQLITE` | `False` | Set to `True` for fast in-memory SQLite (used during testing) |
-| `DB_ENGINE` | `django.db.backends.postgresql` | Database backend engine |
-| `DB_NAME` | `teamboard_db` | PostgreSQL database name |
-| `DB_USER` | `teamboard_user` | PostgreSQL user |
-| `DB_PASSWORD` | `teamboard_pass` | PostgreSQL password |
-| `DB_HOST` | `localhost` | Database host server |
-| `DB_PORT` | `5432` | Database host port |
+| `DB_NAME` | **Required** | PostgreSQL database name |
+| `DB_USER` | **Required** | PostgreSQL user |
+| `DB_PASSWORD` | **Required** | PostgreSQL password |
+| `DB_HOST` | **Required** | Database host server |
+| `DB_PORT` | **Required** | Database host port |
 
 ---
 

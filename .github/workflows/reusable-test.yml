@@ -42,12 +42,14 @@ jobs:
       - name: Verify Django Migrations
         env:
           USE_SQLITE: "True"
+          SECRET_KEY: ci-test-only-secret-key
         run: |
           python manage.py makemigrations --check --dry-run
 
       - name: Run Pytest Suite & Coverage
         env:
           USE_SQLITE: "True"
+          SECRET_KEY: ci-test-only-secret-key
         run: |
           pytest --cov=api --cov-report=xml:coverage.xml --cov-report=term-missing
 
